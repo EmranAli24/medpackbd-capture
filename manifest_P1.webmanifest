@@ -1,0 +1,21 @@
+{
+  "name": "MedPack P1 Shot Logger",
+  "short_name": "MedPack P1",
+  "start_url": "./MedPack_P1_iPhone.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f3f5f5",
+  "theme_color": "#0f7a6c",
+  "icons": [
+    {
+      "src": "icon_P1_192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon_P1_512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

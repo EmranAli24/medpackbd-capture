@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MedPack P2">
+<meta name="theme-color" content="#5b45b0">
+<link rel="manifest" href="manifest_P2.webmanifest">
+<link rel="apple-touch-icon" href="icon_P2_180.png">
+<title>MedPack P2 · Honor</title>
+<style>
+/* One-column field tool: phone badge + sync status on top, brand and settings in the middle, shutter pinned at the bottom. */
+:root{
+  --bg:#f3f5f5; --panel:#ffffff; --ink:#15211f; --muted:#5d6b69; --line:#d5dddc;
+  --accent:#5b45b0; --accent-ink:#ffffff; --accent-soft:#e8e4f7;
+  --ok:#2f7a35; --ok-soft:#e1f1e2; --warn:#a4560c; --warn-soft:#fbecd9; --bad:#b4442f; --bad-soft:#f8e1dc;
+  --f:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,"Roboto Mono",monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0f1514; --panel:#172120; --ink:#e4ecea; --muted:#93a39f; --line:#2a3735;
+  --accent-soft:#2a2346; --ok:#7cc483; --ok-soft:#183420; --warn:#e7a35a; --warn-soft:#3a2914; --bad:#f08a75; --bad-soft:#3b1d17; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 var(--f);-webkit-text-size-adjust:100%}
+.wrap{max-width:640px;margin:0 auto;padding-top:calc(12px + env(safe-area-inset-top,0px));padding-bottom:calc(150px + env(safe-area-inset-bottom,0px));padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:12px}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.badge{display:flex;align-items:center;gap:10px}
+.pid{background:var(--accent);color:var(--accent-ink);font-weight:800;font-size:18px;border-radius:10px;padding:6px 10px;letter-spacing:.02em}
+.badge b{display:block;font-size:16px}
+.badge small{color:var(--muted);font-size:12.5px}
+.gear{font:600 14px var(--f);background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:8px 12px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.lbl{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+select,input[type=text],input[type=url],input[type=password]{width:100%;font:500 16px var(--f);padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.sync{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13.5px}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;font-weight:600;font-size:13px}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.off{background:var(--line);color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+.meta{font-size:13px;color:var(--muted)}
+.overall{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;gap:8px;flex-wrap:wrap}
+.bar{height:7px;background:var(--line);border-radius:4px;overflow:hidden}.bar>i{display:block;height:100%;background:var(--accent)}
+.quota{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.q{border:1px solid var(--line);border-radius:9px;padding:8px;font-variant-numeric:tabular-nums;background:transparent;color:var(--ink);text-align:left;font-family:var(--f)}
+.q b{display:block;font-size:13.5px;font-weight:600}.q span{font-size:12px;color:var(--muted)}
+.q.done{border-color:var(--ok)}.q.done span{color:var(--ok)}
+.q.sel{outline:2px solid var(--accent);outline-offset:-1px;background:var(--accent-soft)}
+.group{display:flex;flex-direction:column;gap:6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 14px var(--f);padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);font-variant-numeric:tabular-nums}
+.chip small{color:var(--muted);margin-left:4px}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip[aria-pressed="true"] small{color:var(--accent-ink);opacity:.85}
+button{cursor:pointer}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{font:600 14px var(--f);padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.toggle{display:flex;align-items:center;gap:8px;font-size:14px}
+.fname{font-family:var(--mono);font-size:12.5px;word-break:break-all;background:var(--bg);border:1px dashed var(--line);border-radius:6px;padding:8px 10px}
+.log{display:flex;flex-direction:column}
+.log .it{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:12px}
+.log .it span{font-family:var(--mono);word-break:break-all}
+.log .it time{color:var(--muted)}
+.st{font-weight:800;text-align:center}
+.st.up{color:var(--ok)}.st.pe{color:var(--warn)}.st.er{color:var(--bad)}
+.empty{font-size:13px;color:var(--muted);margin:0}
+.dock{position:fixed;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--line);padding-top:10px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));z-index:5}
+.dock-in{max-width:640px;margin:0 auto;display:flex;gap:10px}
+label.shutter{position:relative;overflow:hidden;flex:1;display:flex;align-items:center;justify-content:center;gap:10px;background:var(--accent);color:var(--accent-ink);border-radius:14px;padding:17px 12px;font-size:18px;font-weight:700;cursor:pointer}
+label.shutter.alt{flex:0 0 auto;background:var(--panel);color:var(--ink);border:1px solid var(--line);font-size:14.5px;padding:17px 14px}
+label.shutter.busy{opacity:.55;pointer-events:none}
+label.shutter input{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:0;cursor:pointer}
+.ring{width:18px;height:18px;border-radius:50%;border:3px solid currentColor}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:9px;font-size:14px;max-width:min(92vw,560px);z-index:20}
+.toast.warn{background:var(--warn-soft);color:var(--warn);border:1px solid var(--warn)}
+.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--warn)}
+.help{font-size:13px;color:var(--muted);margin:0}
+.err{color:var(--bad);font-size:13px;margin:0}
+</style>
+</head><body>
+<div class="wrap">
+  <header>
+    <div class="badge"><span class="pid">P2</span><div><b>MedPack Shot Logger</b><small>Honor 600 Pro</small></div></div>
+    <button class="gear" id="gearBtn" type="button">Setup</button>
+  </header>
+
+  <section class="panel" id="setup" hidden>
+    <span class="lbl">Connect to your Google Sheet</span>
+    <p class="help">Paste the Web app URL from Apps Script and the same secret word you put in TOKEN. You only do this once on this phone.</p>
+    <label class="group" for="cfgUrl"><span class="lbl">Web app URL</span><input type="url" id="cfgUrl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+    <label class="group" for="cfgToken"><span class="lbl">Secret word (TOKEN)</span><input type="text" id="cfgToken" placeholder="CHANGE-ME-medpack-2026" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+    <label class="toggle"><input type="checkbox" id="cfgBackup"> Also save a copy of each photo on this phone</label>
+    <div class="row"><button class="btn primary" id="saveCfg" type="button">Save and test</button><button class="btn" id="closeCfg" type="button">Close</button></div>
+    <p class="err" id="cfgMsg" hidden></p>
+  </section>
+
+  <section class="panel">
+    <div class="sync">
+      <span class="pill off" id="netPill"><span class="dot"></span><span id="netTxt">Checking…</span></span>
+      <span class="pill off" id="queuePill"><span id="queueTxt">0 waiting</span></span>
+      <span class="meta" id="syncTxt"></span>
+    </div>
+    <p class="err" id="upErr" hidden></p>
+  </section>
+
+  <section class="panel">
+    <div class="group">
+      <label class="lbl" for="brand">Brand</label>
+      <select id="brand"></select>
+      <div class="meta" id="brandMeta"></div>
+    </div>
+    <div class="overall"><span id="brandCount">0 / 100 photos</span><span id="allCount"></span></div>
+    <div class="bar"><i id="brandBar" style="width:0"></i></div>
+    <div class="group">
+      <span class="lbl">Shot type · tap to choose</span>
+      <div class="quota" id="quota"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="opts"></section>
+
+  <section class="panel">
+    <div class="row" style="justify-content:space-between">
+      <span class="lbl">Next filename</span>
+      <label class="toggle"><input type="checkbox" id="auto" checked> Auto-pick next settings</label>
+    </div>
+    <div class="fname" id="fname"></div>
+    <div class="row">
+      <button class="btn" id="suggest" type="button">Suggest least-covered</button>
+      <button class="btn" id="export" type="button">Export CSV backup</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="row" style="justify-content:space-between">
+      <span class="lbl">Recent shots · this phone, this brand</span>
+      <button class="btn" id="undo" type="button">Remove last</button>
+    </div>
+    <div class="confirm" id="undoConfirm" hidden></div>
+    <div class="log" id="log"></div>
+    <p class="help">✓ in Sheet · ⏳ waiting for internet · ! upload failed, will retry</p>
+  </section>
+</div>
+
+<div class="dock"><div class="dock-in">
+  <label class="shutter" id="shutter"><span class="ring" aria-hidden="true"></span><span id="shutterTxt">Take photo</span>
+    <input type="file" id="cam" accept="image/*" capture="environment" aria-label="Take photo">
+  </label>
+  <label class="shutter alt" id="galleryBtn"><span>Gallery</span>
+    <input type="file" id="gallery" accept="image/*" multiple aria-label="Choose photos from gallery">
+  </label>
+</div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+"use strict";
+const PHONE = "P2", DEVICE = "Honor 600 Pro", BACKUP_DEFAULT = true;
+const CATALOG = [
+  ["Paracetamol","500 mg","Analgesic, antipyretic",["Napa","Ace","Renova","Reset","Fast","Xpa"]],
+  ["Esomeprazole","20 mg","Proton pump inhibitor",["Sergel","Maxpro","Exium","Nexum","Esonix","Esoral"]],
+  ["Omeprazole","20 mg","Proton pump inhibitor",["Seclo","Losectil","Xeldrin","Probitor","Omep"]],
+  ["Pantoprazole","20 mg","Proton pump inhibitor",["Pantonix","Pantobex","Trupan","Pantium"]],
+  ["Cetirizine","10 mg","Antihistamine",["Alatrol","Atrizin","Cetizin","Atrol","Citrol"]],
+  ["Fexofenadine","120 mg","Antihistamine",["Fexo","Fenadin","Axodin","Fenofex","Alanil"]],
+  ["Montelukast","10 mg","Leukotriene receptor antagonist",["Monas","Montene","Montair","Provair","Lumona"]],
+  ["Metformin","500 mg","Antidiabetic (biguanide)",["Comet","Glucomet","Metform","Formet","Oramet"]],
+  ["Amlodipine","5 mg","Calcium channel blocker",["Camlodin","Amdocal","Amlopin","Amlotab","Sidopin"]],
+  ["Losartan","50 mg","Angiotensin receptor blocker",["Osartil","Angilock","Prosan","Cardon","Losardil"]],
+  ["Azithromycin","500 mg","Macrolide antibiotic",["Zimax","Azithrocin","Zithrin","Rozith","Azicin"]]
+];
+const BRANDS = {};
+CATALOG.forEach(([g,s,c,list]) => list.forEach((b,i) => BRANDS[b.toLowerCase()] = {name:b, generic:g, strength:s, drugClass:c, core:i<3}));
+const SHOTS = [["front","Front",20],["back","Back",20],["cut","Cut strip",15],["used","Used",15],["box","Box",15],["hand","In hand",15]];
+const OPTS = [
+  ["background","Background",[["white","White paper"],["wood","Wood"],["cloth","Cloth"],["counter","Counter"]]],
+  ["lighting","Lighting",[["day","Daylight"],["tube","Tube light"],["warm","Warm bulb"],["glare","Glare"]]],
+  ["angle","Angle",[["top","Top-down"],["tilt","Tilted"],["rot","Rotated"]]],
+  ["distance","Distance",[["close","Close"],["med","Medium"]]],
+  ["item","Physical item",[["1","#1"],["2","#2"],["3","#3"],["4","#4"]]]
+];
+const PER_BRAND = 100, CORE_TOTAL = 33 * PER_BRAND;
+const K = "medpack_" + PHONE + "_";
+const $ = id => document.getElementById(id);
+
+function lsGet(k, d){ try { const v = localStorage.getItem(K + k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }
+function lsSet(k, v){ try { localStorage.setItem(K + k, JSON.stringify(v)); return true; } catch(e){ return false; } }
+
+let cfg = Object.assign({url:"", token:"", backup:BACKUP_DEFAULT}, lsGet("cfg", {}));
+let log = lsGet("log", []);              // metadata rows of photos taken on this phone
+let server = lsGet("server", null);      // last team counts from the Sheet
+let lastSync = lsGet("lastSync", 0);
+let lastErr = "";
+const st = Object.assign({brand:"napa", shot:"front", background:"white", lighting:"day", angle:"top", distance:"close", item:"1"}, lsGet("ui", {}));
+if (!BRANDS[st.brand]) st.brand = "napa";
+const saveUI = () => lsSet("ui", st);
+const saveLog = () => { if (!lsSet("log", log)) toast("Phone storage is full. Export the CSV backup now.", true); };
+
+/* ---------- IndexedDB upload queue (photos waiting for internet) ---------- */
+let dbp = null;
+function db(){
+  if (!dbp) dbp = new Promise((res, rej) => {
+    const r = indexedDB.open("medpack_queue_" + PHONE, 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("q", {keyPath:"id"});
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  });
+  return dbp;
+}
+async function qOp(mode, fn){ const d = await db(); return new Promise((res, rej) => { const tx = d.transaction("q", mode); const out = fn(tx.objectStore("q")); tx.oncomplete = () => res(out && out.result); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error); }); }
+const qPut = rec => qOp("readwrite", s => s.put(rec));
+const qGet = id => qOp("readonly", s => s.get(id));
+const qDel = id => qOp("readwrite", s => s.delete(id));
+const qKeys = () => qOp("readonly", s => s.getAllKeys());
+try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch(e){}
+
+/* ---------- counts: Sheet (both phones) + this phone's photos not yet uploaded ---------- */
+function teamCounts(){
+  const out = {};
+  const add = (b, f, v, n) => { const B = out[b] || (out[b] = {total:0}); if (f === "total") { B.total += n; return; } B[f] = B[f] || {}; B[f][v] = (B[f][v] || 0) + n; };
+  if (server && server.brands){
+    for (const b in server.brands){ const S = server.brands[b]; add(b, "total", null, S.total || 0);
+      for (const f in S) if (f !== "total") for (const v in S[f]) add(b, f, v, S[f][v]); }
+    log.filter(r => r.status !== "uploaded").forEach(r => countRow(r, add));
+  } else {
+    log.forEach(r => countRow(r, add));
+  }
+  return out;
+}
+function countRow(r, add){ add(r.brandKey, "total", null, 1); ["shot","background","lighting","angle","distance","item","phone"].forEach(f => add(r.brandKey, f, String(r[f]), 1)); }
+const pad = n => String(n).padStart(3, "0");
+function nextSeq(){
+  let m = 0;
+  log.forEach(r => { if (r.brandKey === st.brand && r.seq > m) m = r.seq; });
+  const s = server && server.maxSeq && server.maxSeq[PHONE] && server.maxSeq[PHONE][st.brand];
+  return Math.max(m, s || 0) + 1;
+}
+const extFor = type => /png/.test(type) ? "png" : /heic|heif/.test(type) ? "heic" : "jpg";
+const filename = (ext = "jpg") => [PHONE.toLowerCase(), st.brand, st.shot, st.background, st.lighting, st.angle, st.distance, "i" + st.item, pad(nextSeq())].join("_") + "." + ext;
+
+/* ---------- UI ---------- */
+function toast(msg, warn){ const t = $("toast"); t.textContent = msg; t.className = "toast" + (warn ? " warn" : ""); t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, warn ? 6000 : 2400); }
+function buildBrandSelect(){
+  const sel = $("brand"); sel.innerHTML = "";
+  CATALOG.forEach(([g,s,c,list]) => { const og = document.createElement("optgroup"); og.label = g + " " + s;
+    list.forEach((b,i) => { const o = document.createElement("option"); o.value = b.toLowerCase(); o.textContent = b + (i < 3 ? "" : "  (backup)"); og.appendChild(o); }); sel.appendChild(og); });
+  sel.value = st.brand;
+  sel.onchange = () => { st.brand = sel.value; saveUI(); render(); };
+}
+function buildOpts(){
+  const box = $("opts"); box.innerHTML = "";
+  OPTS.forEach(([key,label,vals]) => {
+    const g = document.createElement("div"); g.className = "group";
+    const l = document.createElement("span"); l.className = "lbl"; l.textContent = label; g.appendChild(l);
+    const c = document.createElement("div"); c.className = "chips"; c.dataset.key = key;
+    vals.forEach(([v,t]) => { const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.dataset.v = v;
+      b.append(t, document.createElement("small")); b.onclick = () => { st[key] = v; saveUI(); render(); }; c.appendChild(b); });
+    g.appendChild(c); box.appendChild(g);
+  });
+}
+async function renderSync(){
+  let waiting = 0; try { waiting = (await qKeys()).length; } catch(e){}
+  const online = navigator.onLine;
+  const np = $("netPill");
+  if (!cfg.url){ np.className = "pill bad"; $("netTxt").textContent = "Not connected · tap Setup"; }
+  else if (!online){ np.className = "pill warn"; $("netTxt").textContent = "Offline · photos are kept"; }
+  else if (uploading){ np.className = "pill warn"; $("netTxt").textContent = "Uploading…"; }
+  else { np.className = "pill ok"; $("netTxt").textContent = "Online · Sheet connected"; }
+  $("queuePill").className = "pill " + (waiting ? "warn" : "ok");
+  $("queueTxt").textContent = waiting ? waiting + " waiting to upload" : "All uploaded";
+  $("syncTxt").textContent = lastSync ? "Team counts updated " + new Date(lastSync).toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"}) : "";
+  const e = $("upErr"); e.hidden = !lastErr; e.textContent = lastErr;
+}
+function render(){
+  const br = BRANDS[st.brand], tc = teamCounts(), B = tc[st.brand] || {total:0};
+  const n = B.total || 0;
+  $("brandMeta").textContent = `${br.generic} ${br.strength} · ${br.drugClass}${br.core ? "" : " · backup brand"}`;
+  $("brandCount").textContent = `${n} / ${PER_BRAND} photos ${server ? "(both phones)" : "(this phone)"}`;
+  $("brandBar").style.width = Math.min(100, n) + "%";
+  let core = 0, all = 0; for (const b in tc){ all += tc[b].total; if (BRANDS[b] && BRANDS[b].core) core += tc[b].total; }
+  $("allCount").textContent = `${core.toLocaleString()} / ${CORE_TOTAL.toLocaleString()} core`;
+  const q = $("quota"); q.innerHTML = "";
+  SHOTS.forEach(([k,t,target]) => { const c = (B.shot && B.shot[k]) || 0; const b = document.createElement("button"); b.type = "button";
+    b.className = "q" + (c >= target ? " done" : "") + (st.shot === k ? " sel" : "");
+    const bb = document.createElement("b"); bb.textContent = t; const sp = document.createElement("span"); sp.textContent = `${c} / ${target}`; b.append(bb, sp);
+    b.onclick = () => { st.shot = k; saveUI(); render(); }; q.appendChild(b); });
+  document.querySelectorAll("#opts .chips").forEach(c => { const key = c.dataset.key, counts = (B[key]) || {};
+    c.querySelectorAll(".chip").forEach(b => { b.setAttribute("aria-pressed", String(st[key] === b.dataset.v)); b.querySelector("small").textContent = counts[b.dataset.v] || 0; }); });
+  $("fname").textContent = filename();
+  const box = $("log"); box.innerHTML = "";
+  const mine = log.filter(r => r.brandKey === st.brand).sort((a,b) => b.ts - a.ts).slice(0, 10);
+  if (!mine.length){ const p = document.createElement("p"); p.className = "empty"; p.textContent = `No photos yet for ${br.name} on this phone. Set the options and tap Take photo.`; box.appendChild(p); }
+  mine.forEach(r => { const d = document.createElement("div"); d.className = "it";
+    const s = document.createElement("span"); s.className = "st " + (r.status === "uploaded" ? "up" : r.status === "error" ? "er" : "pe"); s.textContent = r.status === "uploaded" ? "✓" : r.status === "error" ? "!" : "⏳";
+    const f = document.createElement("span"); f.textContent = r.filename;
+    const t = document.createElement("time"); t.textContent = new Date(r.ts).toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
+    d.append(s, f, t); box.appendChild(d); });
+  renderSync();
+}
+function pickLeast(key, vals, counts){ let best = [], min = Infinity; vals.forEach(([v]) => { const c = (counts && counts[v]) || 0; if (c < min){ min = c; best = [v]; } else if (c === min) best.push(v); }); return best[Math.floor(Math.random() * best.length)]; }
+function suggest(){
+  const B = teamCounts()[st.brand] || {};
+  let bestShot = st.shot, gap = -Infinity;
+  SHOTS.forEach(([k,,t]) => { const g = t - ((B.shot && B.shot[k]) || 0); if (g > gap){ gap = g; bestShot = k; } });
+  st.shot = bestShot;
+  OPTS.forEach(([key,,vals]) => { st[key] = pickLeast(key, vals, B[key]); });
+  saveUI(); render();
+}
+function imgSize(file){ return new Promise(res => { const u = URL.createObjectURL(file); const im = new Image(); im.onload = () => { res([im.naturalWidth, im.naturalHeight]); URL.revokeObjectURL(u); }; im.onerror = () => { res([0,0]); URL.revokeObjectURL(u); }; im.src = u; }); }
+function saveCopy(blob, name){ try { const u = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 5000); } catch(e){} }
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+
+/* ---------- capture ---------- */
+async function handleFiles(e){
+  const files = Array.from(e.target.files || []); e.target.value = "";
+  if (!files.length) return;
+  setBusy(true);
+  try { for (const f of files){ if (!(await addPhoto(f))) break; } }
+  finally { setBusy(false); }
+  processQueue();
+}
+function setBusy(b){ $("shutter").classList.toggle("busy", b); $("galleryBtn").classList.toggle("busy", b); $("shutterTxt").textContent = b ? "Saving…" : "Take photo"; }
+async function addPhoto(file){
+  const mb = file.size / 1048576;
+  if (mb > 30){ toast(`Photo is ${mb.toFixed(0)} MB, too big to upload. Use the normal photo mode (not 50/200 MP).`, true); return false; }
+  if (/heic|heif/i.test(file.type || "") || /\.hei[cf]$/i.test(file.name || "")) toast("This photo is HEIC. Set iPhone Settings > Camera > Formats > Most Compatible so photos are JPEG.", true);
+  const br = BRANDS[st.brand], ext = extFor(file.type || ""), name = filename(ext), [w,h] = await imgSize(file);
+  const meta = { id: uid(), filename: name, phone: PHONE, device: DEVICE, drug_class: br.drugClass, generic: br.generic, strength: br.strength,
+    brand: br.name, brand_key: st.brand, shot: st.shot, background: st.background, lighting: st.lighting, angle: st.angle, distance: st.distance,
+    item: st.item, seq: nextSeq(), width: w, height: h, captured_at: new Date().toISOString(), core: br.core };
+  try { await qPut({ id: meta.id, meta, blob: file }); }
+  catch(err){ toast("Couldn't keep this photo on the phone (" + (err && err.name || "storage error") + "). Not logged; try again.", true); return false; }
+  log.push(Object.assign({ brandKey: st.brand, ts: Date.now(), status: "pending" }, meta)); saveLog();
+  if (cfg.backup) saveCopy(file, name);
+  if (mb > 15) toast(`Saved, but ${mb.toFixed(0)} MB is large and slow to upload.`, true); else toast("Saved " + name);
+  if ($("auto").checked) suggest(); else render();
+  return true;
+}
+$("cam").addEventListener("change", handleFiles);
+$("gallery").addEventListener("change", handleFiles);
+
+/* ---------- upload ---------- */
+let uploading = false;
+function blobToB64(blob){ return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1] || ""); r.onerror = () => rej(r.error); r.readAsDataURL(blob); }); }
+async function post(body, ms){
+  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), ms || 180000);
+  try { const r = await fetch(cfg.url, { method: "POST", body: JSON.stringify(body), signal: ctl.signal, redirect: "follow" }); return await r.json(); }
+  finally { clearTimeout(t); }
+}
+function setRow(id, patch){ const r = log.find(x => x.id === id); if (r) Object.assign(r, patch); saveLog(); }
+async function processQueue(){
+  if (uploading || !cfg.url || !cfg.token || !navigator.onLine) { renderSync(); return; }
+  uploading = true; renderSync();
+  let did = false;
+  try {
+    const ids = await qKeys();
+    for (const id of ids){
+      const rec = await qGet(id); if (!rec) continue;
+      let res;
+      try { res = await post(Object.assign({}, rec.meta, { token: cfg.token, image: await blobToB64(rec.blob), mime: rec.blob.type || "image/jpeg" })); }
+      catch(err){ lastErr = navigator.onLine ? "Upload interrupted. It will retry automatically." : ""; setRow(id, { status: "pending" }); break; }
+      if (res && res.ok){ await qDel(id); setRow(id, { status: "uploaded", filename: res.filename || rec.meta.filename, url: res.url || "" }); lastErr = ""; did = true; render(); }
+      else if (res && res.error === "bad_token"){ lastErr = "The Sheet refused the secret word. Open Setup and check TOKEN."; break; }
+      else { lastErr = "Upload failed: " + ((res && res.error) || "unknown") + ". It will retry."; setRow(id, { status: "error" }); break; }
+    }
+  } finally { uploading = false; }
+  if (did || !server || Date.now() - lastSync > 120000) await refreshCounts(); else renderSync();
+  render();
+}
+async function refreshCounts(){
+  if (!cfg.url || !cfg.token || !navigator.onLine) return;
+  try {
+    const r = await fetch(cfg.url + (cfg.url.includes("?") ? "&" : "?") + "action=counts&token=" + encodeURIComponent(cfg.token), { redirect: "follow" });
+    const j = await r.json();
+    if (j && j.ok){ server = j; lastSync = Date.now(); lsSet("server", server); lsSet("lastSync", lastSync); }
+  } catch(e){}
+}
+
+/* ---------- setup ---------- */
+function openSetup(){ $("setup").hidden = false; $("cfgUrl").value = cfg.url; $("cfgToken").value = cfg.token; $("cfgBackup").checked = !!cfg.backup; $("cfgMsg").hidden = true; }
+$("gearBtn").onclick = () => $("setup").hidden ? openSetup() : ($("setup").hidden = true);
+$("closeCfg").onclick = () => $("setup").hidden = true;
+$("saveCfg").onclick = async () => {
+  const url = $("cfgUrl").value.trim(), token = $("cfgToken").value.trim(), m = $("cfgMsg");
+  m.hidden = false; m.style.color = "";
+  if (!/^https:\/\/script\.google(usercontent)?\.com\//.test(url)){ m.textContent = "The URL should start with https://script.google.com/macros/s/ and end with /exec."; return; }
+  if (!token){ m.textContent = "Enter the secret word you set as TOKEN in Apps Script."; return; }
+  cfg = { url, token, backup: $("cfgBackup").checked }; lsSet("cfg", cfg);
+  m.textContent = "Testing…"; m.style.color = "var(--muted)";
+  try {
+    const r = await fetch(url + "?action=ping&token=" + encodeURIComponent(token), { redirect: "follow" }); const j = await r.json();
+    if (j.ok){ m.style.color = "var(--ok)"; m.textContent = `Connected to "${j.sheet}" (${j.rows} rows). Photos go to the MedPackBD_images folder in Drive.`; lastErr = ""; await refreshCounts(); processQueue(); setTimeout(() => $("setup").hidden = true, 2500); }
+    else { m.style.color = ""; m.textContent = j.error === "bad_token" ? "Connected, but the secret word doesn't match TOKEN in Apps Script." : "The Sheet answered with an error: " + j.error; }
+  } catch(err){ m.style.color = ""; m.textContent = "Couldn't reach the Sheet. Check the URL, that the deployment has access \"Anyone\", and that you're online."; }
+  renderSync();
+};
+
+/* ---------- other actions ---------- */
+$("suggest").onclick = suggest;
+$("undo").onclick = () => {
+  const last = log.filter(r => r.brandKey === st.brand).sort((a,b) => b.ts - a.ts)[0], c = $("undoConfirm");
+  if (!last){ toast("Nothing to remove for this brand."); return; }
+  c.hidden = false; c.innerHTML = "";
+  const s = document.createElement("span"); s.textContent = `Remove ${last.filename}${last.status === "uploaded" ? " from the Sheet and Drive" : ""}?`;
+  const y = document.createElement("button"); y.className = "btn"; y.type = "button"; y.textContent = "Remove";
+  const n = document.createElement("button"); n.className = "btn"; n.type = "button"; n.textContent = "Keep";
+  y.onclick = async () => {
+    c.hidden = true;
+    if (last.status === "uploaded"){
+      if (!navigator.onLine){ toast("Go online to remove an uploaded photo.", true); return; }
+      try { const r = await post({ action: "delete", id: last.id, token: cfg.token }, 60000); if (!r.ok && r.error !== "not_found"){ toast("Couldn't remove: " + r.error, true); return; } }
+      catch(e){ toast("Couldn't reach the Sheet. Try again.", true); return; }
+    } else { try { await qDel(last.id); } catch(e){} }
+    log = log.filter(r => r.id !== last.id); saveLog(); await refreshCounts(); render(); toast("Removed");
+  };
+  n.onclick = () => c.hidden = true; c.append(s, y, n);
+};
+$("export").onclick = () => {
+  if (!log.length){ toast("No photos logged on this phone yet."); return; }
+  const cols = ["filename","phone","device","drug_class","generic","strength","brand","shot","background","lighting","angle","distance","item","width","height","captured_at","status","url"];
+  const esc = v => { v = String(v ?? ""); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+  const csv = [cols.join(",")].concat(log.slice().sort((a,b) => a.ts - b.ts).map(r => cols.map(c => esc(r[c])).join(","))).join("\n");
+  const d = new Date(), stamp = d.toISOString().slice(0,16).replace(/[-:T]/g, "");
+  saveCopy(new Blob([csv], { type: "text/csv" }), `medpack_${PHONE.toLowerCase()}_${stamp}.csv`);
+};
+
+/* ---------- start ---------- */
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+buildBrandSelect(); buildOpts(); render();
+if (!cfg.url) openSetup();
+window.addEventListener("online", () => { renderSync(); processQueue(); });
+window.addEventListener("offline", renderSync);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) processQueue(); });
+setInterval(processQueue, 30000);
+processQueue();
+</script>
+</body></html>
